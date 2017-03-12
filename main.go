@@ -2,13 +2,30 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gbbr/hue"
 )
 
 func main() {
+	//	sleepTimer()
+	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/sleepTimer", sleepTimer)
+	if err := http.ListenAndServe(":9090", nil); err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
+	fmt.Println("reached end")
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	t, _ := template.ParseFiles("index.html")
+	t.Execute(w, "bla")
+}
+
+func auth() *hue.Bridge {
 	b, err := hue.Discover()
 	if err != nil {
 		fmt.Println("discovery failed")
@@ -20,17 +37,17 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	sleepTimer(b)
-	fmt.Println("reached end")
+	return b
 }
 
-func sleepTimer(b *hue.Bridge) {
+func sleepTimer(w http.ResponseWriter, r *http.Request) {
+	b := auth()
 	nk, err := b.Lights().Get("Nachtkaestchen")
 	if err != nil {
 		log.Fatal(err)
 	}
 	brightness := uint8(255)
-	fmt.Println("Turning light on")
+	fmt.Fprintf(w, "Turning light on")
 	nk.On()
 	nk.Set(&hue.State{
 		Brightness: brightness,
