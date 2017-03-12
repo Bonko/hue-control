@@ -11,10 +11,11 @@ import (
 )
 
 func main() {
+	fmt.Println("listening..")
 	//	sleepTimer()
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/sleepTimer", sleepTimer)
-	if err := http.ListenAndServe(":9090", nil); err != nil {
+	if err := http.ListenAndServe(":9091", nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 	fmt.Println("reached end")
@@ -32,8 +33,10 @@ func auth() *hue.Bridge {
 		log.Fatal(err)
 	}
 	if !b.IsPaired() {
+		fmt.Println("program not paired with bridge")
 		// link button must be pressed before calling
 		if err := b.Pair(); err != nil {
+			fmt.Println("pairing failed")
 			log.Fatal(err)
 		}
 	}
