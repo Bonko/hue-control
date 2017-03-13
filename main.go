@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -22,8 +21,8 @@ func main() {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.ParseFiles("index.html")
-	t.Execute(w, "bla")
+	html := `<a href="/sleepTimer">sleep timer</a>`
+	fmt.Fprintf(w, html)
 }
 
 func auth() *hue.Bridge {
