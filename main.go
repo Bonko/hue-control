@@ -14,7 +14,7 @@ func main() {
 	fmt.Println("listening..")
 	//	sleepTimer()
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/sleepTimer", sleepTimer)
+	http.HandleFunc("/sleepTimer", startSleepTimer)
 	if err := http.ListenAndServe(":9091", nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
@@ -43,14 +43,18 @@ func auth() *hue.Bridge {
 	return b
 }
 
-func sleepTimer(w http.ResponseWriter, r *http.Request) {
+func startSleepTimer(w http.ResponseWriter, r *http.Request) {
+	go sleepTimer()
+	fmt.Fprintf(w, "Started sleepTimer")
+}
+func sleepTimer() {
 	b := auth()
 	nk, err := b.Lights().Get("Nachtkaestchen")
 	if err != nil {
 		log.Fatal(err)
 	}
 	brightness := uint8(255)
-	fmt.Fprintf(w, "Turning light on")
+	fmt.Println("Turning light on")
 	nk.On()
 	nk.Set(&hue.State{
 		Brightness: brightness,
