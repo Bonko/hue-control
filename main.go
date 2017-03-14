@@ -10,14 +10,14 @@ import (
 )
 
 func main() {
-	fmt.Println("listening..")
+	log.Println("listening..")
 	//	sleepTimer()
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/sleepTimer", startSleepTimer)
 	if err := http.ListenAndServe(":9091", nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
-	fmt.Println("reached end")
+	log.Println("reached end")
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,14 +28,14 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 func auth() *hue.Bridge {
 	b, err := hue.Discover()
 	if err != nil {
-		fmt.Println("discovery failed")
+		log.Println("discovery failed")
 		log.Fatal(err)
 	}
 	if !b.IsPaired() {
-		fmt.Println("program not paired with bridge")
+		log.Println("program not paired with bridge")
 		// link button must be pressed before calling
 		if err := b.Pair(); err != nil {
-			fmt.Println("pairing failed")
+			log.Println("pairing failed")
 			log.Fatal(err)
 		}
 	}
@@ -53,7 +53,7 @@ func sleepTimer() {
 		log.Fatal(err)
 	}
 	brightness := uint8(255)
-	fmt.Println("Turning light on")
+	log.Println("Turning light on")
 	nk.On()
 	nk.Set(&hue.State{
 		Brightness: brightness,
@@ -61,16 +61,16 @@ func sleepTimer() {
 	remaining_time := 20 * time.Minute
 	for remaining_time > 0 && brightness > 25 {
 		interval := 2 * time.Minute
-		fmt.Println("Sleeping", interval)
+		log.Println("Sleeping", interval)
 		time.Sleep(interval)
 		brightness = brightness - 25
-		fmt.Println("Decreasing brightness to", brightness)
+		log.Println("Decreasing brightness to", brightness)
 		nk.Set(&hue.State{
 			Brightness: brightness,
 		})
-		fmt.Println(nk.State.Brightness)
+		log.Println(nk.State.Brightness)
 		remaining_time = remaining_time - interval
-		fmt.Println("Remaining Time:", remaining_time)
+		log.Println("Remaining Time:", remaining_time)
 	}
 	nk.Off()
 }
