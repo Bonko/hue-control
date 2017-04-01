@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gbbr/hue"
+	"github.com/Bonko/hue"
 )
 
 func main() {
