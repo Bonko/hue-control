@@ -25,3 +25,5 @@ _testmain.go
 
 *.swp
 hue-control
+hue-control_amd64
+hue-control_arm
