@@ -1,0 +1,15 @@
+{
+	"ImportPath": "github.com/Bonko/hue-control",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Bonko/hue",
+			"Rev": "a5e8dc8886bed0b3726e33930dddfa5c91ef5695"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/go-homedir",
+			"Rev": "b8bc1bf767474819792c23f32d8286a45736f1c6"
+		}
+	]
+}
