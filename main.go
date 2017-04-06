@@ -74,12 +74,17 @@ func sleepTimer(duration time.Duration) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	original_brightness := nk.State.Brightness
+	log.Println("Current brightness:", original_brightness)
+
 	brightness := uint8(255)
 	log.Println("Turning light on")
 	nk.On()
+	log.Println("Seting brightness to:", brightness)
 	nk.Set(&hue.State{
 		Brightness: brightness,
 	})
+
 	remaining_time := duration * time.Minute
 	interval := remaining_time / 10
 	for remaining_time > 0 && brightness > 25 {
@@ -93,6 +98,16 @@ func sleepTimer(duration time.Duration) {
 		remaining_time = remaining_time - interval
 		log.Println("Remaining Time:", remaining_time)
 	}
+
+	log.Println("Setting brightness back to original value:", original_brightness)
+	// use a high transition time (10 seconds) in order to set brightness back to its original value
+	// without actually raising the brightness (and wake me up again)
+	// it has to be done this way, because brightness cannot be set when the light is turned off
+	nk.Set(&hue.State{
+		Brightness:     original_brightness,
+		TransitionTime: 100,
+	})
+
 	log.Println("Turning light off")
 	nk.Off()
 }
