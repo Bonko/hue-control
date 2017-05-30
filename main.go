@@ -63,12 +63,17 @@ func startSleepTimer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal("cannot  convert  duration to int: %s", err)
 	}
-
-	go sleepTimer(time.Duration(duration))
+	// XXX make param
+	keep_brightness := true
+	go sleepTimer(time.Duration(duration), keep_brightness)
 	fmt.Fprintf(w, "Started sleepTimer (duration: %d minutes)", duration)
 }
 
-func sleepTimer(duration time.Duration) {
+func calcSteps(start uint8) uint8 {
+	return start / 10
+}
+
+func sleepTimer(duration time.Duration, keep_brightness bool) {
 	b := auth()
 	nk, err := b.Lights().Get("Nachtkaestchen")
 	if err != nil {
@@ -77,20 +82,30 @@ func sleepTimer(duration time.Duration) {
 	original_brightness := nk.State.Brightness
 	log.Println("Current brightness:", original_brightness)
 
-	brightness := uint8(255)
 	log.Println("Turning light on")
 	nk.On()
-	log.Println("Seting brightness to:", brightness)
-	nk.Set(&hue.State{
-		Brightness: brightness,
-	})
 
+	var brightness uint8
+
+	if keep_brightness {
+		brightness = original_brightness
+	} else {
+		// set to full brightness
+		brightness = 255
+		log.Println("Seting brightness to:", brightness)
+		nk.Set(&hue.State{
+			Brightness: brightness,
+		})
+	}
+
+	brightnessDecreaseStep := calcSteps(brightness)
 	remaining_time := duration * time.Minute
 	interval := remaining_time / 10
-	for remaining_time > 0 && brightness > 25 {
+
+	for remaining_time > 0 && brightness > brightnessDecreaseStep {
 		log.Println("Sleeping", interval)
 		time.Sleep(interval)
-		brightness = brightness - 25
+		brightness = brightness - brightnessDecreaseStep
 		nk.Set(&hue.State{
 			Brightness: brightness,
 		})
