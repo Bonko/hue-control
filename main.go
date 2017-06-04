@@ -64,10 +64,10 @@ func startSleepTimer(w http.ResponseWriter, r *http.Request) {
 
 	b := r.Form["brightness"][0]
 	b64, err := strconv.ParseUint(b, 10, 8)
-	brightness := uint8(b64)
 	if err != nil {
-		log.Fatal("cannot convert brightness to int: %s", err)
+		log.Fatal("cannot convert brightness to uint: %s", err)
 	}
+	brightness := uint8(b64)
 	go sleepTimer(time.Duration(duration), brightness)
 	fmt.Fprintf(w, "Started sleepTimer (duration: %d minutes)", duration)
 }
