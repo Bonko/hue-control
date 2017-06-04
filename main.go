@@ -59,11 +59,16 @@ func startSleepTimer(w http.ResponseWriter, r *http.Request) {
 	d := r.Form["duration"][0]
 	duration, err := strconv.Atoi(d)
 	if err != nil {
-		log.Fatal("cannot  convert  duration to int: %s", err)
+		log.Fatal("cannot convert duration to int: %s", err)
 	}
-	// XXX make param
-	keep_brightness := true
-	go sleepTimer(time.Duration(duration), keep_brightness)
+
+	b := r.Form["brightness"][0]
+	b64, err := strconv.ParseUint(b, 10, 8)
+	brightness := uint8(b64)
+	if err != nil {
+		log.Fatal("cannot convert brightness to int: %s", err)
+	}
+	go sleepTimer(time.Duration(duration), brightness)
 	fmt.Fprintf(w, "Started sleepTimer (duration: %d minutes)", duration)
 }
 
@@ -71,7 +76,7 @@ func calcSteps(start uint8) uint8 {
 	return start / 10
 }
 
-func sleepTimer(duration time.Duration, keep_brightness bool) {
+func sleepTimer(duration time.Duration, startBrightness uint8) {
 	b := auth()
 	nk, err := b.Lights().Get("Nachtkaestchen")
 	if err != nil {
@@ -85,12 +90,12 @@ func sleepTimer(duration time.Duration, keep_brightness bool) {
 
 	var brightness uint8
 
-	if keep_brightness {
+	if startBrightness == 0 {
 		brightness = original_brightness
+		log.Println("Keeping brightness:", brightness)
 	} else {
-		// set to full brightness
-		brightness = 255
-		log.Println("Seting brightness to:", brightness)
+		brightness = startBrightness
+		log.Println("Setting brightness to:", brightness)
 		nk.Set(&hue.State{
 			Brightness: brightness,
 		})
