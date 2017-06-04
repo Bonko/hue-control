@@ -1,5 +1,7 @@
 package main
 
+//go:generate go-bindata -pkg $GOPACKAGE -o assets.go assets/
+
 import (
 	"fmt"
 	"log"
@@ -10,33 +12,29 @@ import (
 	"github.com/Bonko/hue"
 )
 
+const (
+	port = 9091
+)
+
 func main() {
-	log.Println("listening..")
+	log.Printf("listening on port %d", port)
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/sleepTimer", startSleepTimer)
-	if err := http.ListenAndServe(":9091", nil); err != nil {
+	port_string := fmt.Sprintf(":%d", port)
+	if err := http.ListenAndServe(port_string, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 	log.Println("reached end")
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	html := `
-	<html>
-	<form action="/sleepTimer">
-	  <label>Sleeptimer duration (minute):
-	    <select name="duration" size="1">
-		  <option>1</option>
-		  <option>5</option>
-		  <option>10</option>
-		  <option selected>20</option>
-		  <option>30</option>
-		</select>
-		<input type="submit" value="Go">
-	  </label>
-	</form>
-	</html>`
-	fmt.Fprintf(w, html)
+	html, err := Asset("assets/index.html")
+	if err != nil {
+		http.Error(w, "Could not load html: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(html)
 }
 
 func auth() *hue.Bridge {
@@ -61,14 +59,24 @@ func startSleepTimer(w http.ResponseWriter, r *http.Request) {
 	d := r.Form["duration"][0]
 	duration, err := strconv.Atoi(d)
 	if err != nil {
-		log.Fatal("cannot  convert  duration to int: %s", err)
+		log.Fatal("cannot convert duration to int: %s", err)
 	}
 
-	go sleepTimer(time.Duration(duration))
+	b := r.Form["brightness"][0]
+	b64, err := strconv.ParseUint(b, 10, 8)
+	brightness := uint8(b64)
+	if err != nil {
+		log.Fatal("cannot convert brightness to int: %s", err)
+	}
+	go sleepTimer(time.Duration(duration), brightness)
 	fmt.Fprintf(w, "Started sleepTimer (duration: %d minutes)", duration)
 }
 
-func sleepTimer(duration time.Duration) {
+func calcSteps(start uint8) uint8 {
+	return start / 10
+}
+
+func sleepTimer(duration time.Duration, startBrightness uint8) {
 	b := auth()
 	nk, err := b.Lights().Get("Nachtkaestchen")
 	if err != nil {
@@ -77,20 +85,30 @@ func sleepTimer(duration time.Duration) {
 	original_brightness := nk.State.Brightness
 	log.Println("Current brightness:", original_brightness)
 
-	brightness := uint8(255)
 	log.Println("Turning light on")
 	nk.On()
-	log.Println("Seting brightness to:", brightness)
-	nk.Set(&hue.State{
-		Brightness: brightness,
-	})
 
+	var brightness uint8
+
+	if startBrightness == 0 {
+		brightness = original_brightness
+		log.Println("Keeping brightness:", brightness)
+	} else {
+		brightness = startBrightness
+		log.Println("Setting brightness to:", brightness)
+		nk.Set(&hue.State{
+			Brightness: brightness,
+		})
+	}
+
+	brightnessDecreaseStep := calcSteps(brightness)
 	remaining_time := duration * time.Minute
 	interval := remaining_time / 10
-	for remaining_time > 0 && brightness > 25 {
+
+	for remaining_time > 0 && brightness > brightnessDecreaseStep {
 		log.Println("Sleeping", interval)
 		time.Sleep(interval)
-		brightness = brightness - 25
+		brightness = brightness - brightnessDecreaseStep
 		nk.Set(&hue.State{
 			Brightness: brightness,
 		})
