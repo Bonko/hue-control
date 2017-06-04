@@ -1,5 +1,7 @@
 package main
 
+//go:generate go-bindata -pkg $GOPACKAGE -o assets.go assets/
+
 import (
 	"fmt"
 	"log"
@@ -21,22 +23,13 @@ func main() {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	html := `
-	<html>
-	<form action="/sleepTimer">
-	  <label>Sleeptimer duration (minute):
-	    <select name="duration" size="1">
-		  <option>1</option>
-		  <option>5</option>
-		  <option>10</option>
-		  <option selected>20</option>
-		  <option>30</option>
-		</select>
-		<input type="submit" value="Go">
-	  </label>
-	</form>
-	</html>`
-	fmt.Fprintf(w, html)
+	html, err := Asset("assets/index.html")
+	if err != nil {
+		http.Error(w, "Could not load html: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(html)
 }
 
 func auth() *hue.Bridge {
