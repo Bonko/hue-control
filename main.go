@@ -12,11 +12,16 @@ import (
 	"github.com/Bonko/hue"
 )
 
+const (
+	port = 9091
+)
+
 func main() {
-	log.Println("listening..")
+	log.Printf("listening on port %d", port)
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/sleepTimer", startSleepTimer)
-	if err := http.ListenAndServe(":9091", nil); err != nil {
+	port_string := fmt.Sprintf(":%d", port)
+	if err := http.ListenAndServe(port_string, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 	log.Println("reached end")
