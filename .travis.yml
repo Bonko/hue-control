@@ -1,0 +1,13 @@
+language: go
+go: 1.8.3
+
+script: make build
+
+deploy:
+  provider: releases
+  api_key: ${GITHUB_TOKEN}
+  file_glob: true
+  file: pkg/*
+  skip_cleanup: true
+  on:
+    tags: true
