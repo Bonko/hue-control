@@ -32,12 +32,11 @@ func main() {
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	debugHtmlPath, _ := filepath.Abs("html/index.html")
-	if _, err := os.Stat(debugHtmlPath); os.IsExist(err) {
-		log.Printf("%s exists", debugHtmlPath)
+
+	if _, err := os.Stat(debugHtmlPath); err == nil {
 		t := template.Must(template.ParseFiles(debugHtmlPath))
 		t.Execute(w, nil)
 	} else {
-		log.Printf("%s does not exist", debugHtmlPath)
 		html, err := Asset("assets/index.html")
 		if err != nil {
 			http.Error(w, "Could not load html: "+err.Error(), http.StatusInternalServerError)
