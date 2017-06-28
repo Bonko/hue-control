@@ -31,7 +31,7 @@ func main() {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	debugHtmlPath, _ := filepath.Abs("html/index.html")
+	debugHtmlPath, _ := filepath.Abs(".debug/html/index.html")
 
 	if _, err := os.Stat(debugHtmlPath); err == nil {
 		t := template.Must(template.ParseFiles(debugHtmlPath))
