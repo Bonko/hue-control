@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Bonko/hue"
+	"github.com/gbbr/hue"
 )
 
 const (
