@@ -27,3 +27,5 @@ _testmain.go
 hue-control
 hue-control_amd64
 hue-control_arm
+
+.debug/
