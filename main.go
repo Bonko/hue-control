@@ -85,8 +85,32 @@ func calcSteps(start uint8) uint8 {
 	return start / 10
 }
 
+func getAvailableLights(b *hue.Bridge) ([]*hue.Light, error) {
+	lightsService := b.Lights()
+	availableLights, err := lightsService.List()
+	if err != nil {
+		return nil, err
+	}
+	return availableLights, nil
+}
+
+func getAvailableLightNames(lights []*hue.Light) []string {
+	var availableLightNames []string
+	for _, v := range lights {
+		availableLightNames = append(availableLightNames, v.Name)
+	}
+	return availableLightNames
+}
+
 func sleepTimer(duration time.Duration, startBrightness uint8) {
 	b := auth()
+	availableLights, err := getAvailableLights(b)
+	if err != nil {
+		log.Fatalf("error while retrieving lights: %s", err)
+	}
+	availableLightNames := getAvailableLightNames(availableLights)
+	log.Printf("availableLightNames: %v", availableLightNames)
+	return
 	nk, err := b.Lights().Get("Nachtkaestchen")
 	if err != nil {
 		log.Fatal(err)
