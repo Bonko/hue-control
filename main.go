@@ -4,8 +4,11 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -28,13 +31,20 @@ func main() {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	html, err := Asset("assets/index.html")
-	if err != nil {
-		http.Error(w, "Could not load html: "+err.Error(), http.StatusInternalServerError)
-		return
+	debugHtmlPath, _ := filepath.Abs("html/index.html")
+	if _, err := os.Stat(debugHtmlPath); os.IsExist(err) {
+		log.Printf("%s exists", debugHtmlPath)
+		t := template.Must(template.ParseFiles(debugHtmlPath))
+		t.Execute(w, nil)
+	} else {
+		log.Printf("%s does not exist", debugHtmlPath)
+		html, err := Asset("assets/index.html")
+		if err != nil {
+			http.Error(w, "Could not load html: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(html)
 	}
-
-	w.Write(html)
 }
 
 func auth() *hue.Bridge {
