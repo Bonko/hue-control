@@ -41,6 +41,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := os.Stat(debugHtmlPath); err == nil {
 		t := template.Must(template.ParseFiles(debugHtmlPath))
+		t.Execute(w, availableLights)
 	} else {
 		html, err := Asset("assets/index.html")
 		if err != nil {
@@ -50,8 +51,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		// transform bytes from asset into string
 		htmlAsString := string(html[:])
 		t := template.Must(template.New("name").Parse(htmlAsString))
+		t.Execute(w, availableLights)
 	}
-	t.Execute(w, availableLights)
 }
 
 func auth() *hue.Bridge {
