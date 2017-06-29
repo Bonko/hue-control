@@ -41,15 +41,17 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := os.Stat(debugHtmlPath); err == nil {
 		t := template.Must(template.ParseFiles(debugHtmlPath))
-		t.Execute(w, availableLights)
 	} else {
 		html, err := Asset("assets/index.html")
 		if err != nil {
 			http.Error(w, "Could not load html: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Write(html)
+		// transform bytes from asset into string
+		htmlAsString := string(html[:])
+		t := template.Must(template.New("name").Parse(htmlAsString))
 	}
+	t.Execute(w, availableLights)
 }
 
 func auth() *hue.Bridge {
