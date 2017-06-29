@@ -33,9 +33,15 @@ func main() {
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	debugHtmlPath, _ := filepath.Abs(".debug/html/index.html")
 
+	b := auth()
+	availableLights, err := getAvailableLights(b)
+	if err != nil {
+		log.Fatalf("error while retrieving lights: %s", err)
+	}
+
 	if _, err := os.Stat(debugHtmlPath); err == nil {
 		t := template.Must(template.ParseFiles(debugHtmlPath))
-		t.Execute(w, nil)
+		t.Execute(w, availableLights)
 	} else {
 		html, err := Asset("assets/index.html")
 		if err != nil {
@@ -65,6 +71,7 @@ func auth() *hue.Bridge {
 
 func startSleepTimer(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
+	lightName := r.Form["light"][0]
 	d := r.Form["duration"][0]
 	duration, err := strconv.Atoi(d)
 	if err != nil {
@@ -77,7 +84,7 @@ func startSleepTimer(w http.ResponseWriter, r *http.Request) {
 		log.Fatal("cannot convert brightness to uint: %s", err)
 	}
 	brightness := uint8(b64)
-	go sleepTimer(time.Duration(duration), brightness)
+	go sleepTimer(lightName, time.Duration(duration), brightness)
 	fmt.Fprintf(w, "Started sleepTimer (duration: %d minutes)", duration)
 }
 
@@ -102,16 +109,9 @@ func getAvailableLightNames(lights []*hue.Light) []string {
 	return availableLightNames
 }
 
-func sleepTimer(duration time.Duration, startBrightness uint8) {
+func sleepTimer(lightName string, duration time.Duration, startBrightness uint8) {
 	b := auth()
-	availableLights, err := getAvailableLights(b)
-	if err != nil {
-		log.Fatalf("error while retrieving lights: %s", err)
-	}
-	availableLightNames := getAvailableLightNames(availableLights)
-	log.Printf("availableLightNames: %v", availableLightNames)
-	return
-	nk, err := b.Lights().Get("Nachtkaestchen")
+	nk, err := b.Lights().Get(lightName)
 	if err != nil {
 		log.Fatal(err)
 	}
