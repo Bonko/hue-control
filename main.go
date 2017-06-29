@@ -103,14 +103,6 @@ func getAvailableLights(b *hue.Bridge) ([]*hue.Light, error) {
 	return availableLights, nil
 }
 
-func getAvailableLightNames(lights []*hue.Light) []string {
-	var availableLightNames []string
-	for _, v := range lights {
-		availableLightNames = append(availableLightNames, v.Name)
-	}
-	return availableLightNames
-}
-
 func sleepTimer(lightName string, duration time.Duration, startBrightness uint8) {
 	b := auth()
 	nk, err := b.Lights().Get(lightName)
