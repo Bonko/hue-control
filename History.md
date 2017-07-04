@@ -1,3 +1,9 @@
+# 0.4.0 / 2017-07-04
+
+  * [Feature] choose light to shutdown
+  * Use upstream hue library again
+  * HTML enhancement: try bootstrap
+
 # 0.3.0 / 2017-06-04
 
   * [Feature] Make starting brightness configurable
