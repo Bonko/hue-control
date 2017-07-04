@@ -6,6 +6,14 @@
     <body>
         <form action="/sleepTimer">
             <h1> Hue Sleeptimer </h1>
+            <label>Light:
+                <select name="light" size="1">
+                    {{range .}}
+                    <option>{{.Name}}</option>
+                    {{end}}
+                </select>
+            </label>
+            <br>
             <label>Duration (minute):
                 <select name="duration" size="1">
                     <option>1</option>
