@@ -136,10 +136,23 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	for remaining_time > 0 && brightness > brightnessDecreaseStep {
 		log.Println("Sleeping", interval)
 		time.Sleep(interval)
+		// re-initialize nk, because the LightState struct does not get updated
+		// when light is changed outside the script, e.g. via Hue app
+		nk, err = b.Lights().Get(lightName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if nk.State.Brightness != brightness {
+			log.Println("Light was changed externally, cancelling timer")
+			return
+		}
 		brightness = brightness - brightnessDecreaseStep
-		nk.Set(&hue.State{
+		err := nk.Set(&hue.State{
 			Brightness: brightness,
 		})
+		if err != nil {
+			log.Fatal(err)
+		}
 		log.Println("Decreased brightness to:", nk.State.Brightness, "expected:", brightness)
 		remaining_time = remaining_time - interval
 		log.Println("Remaining Time:", remaining_time)
