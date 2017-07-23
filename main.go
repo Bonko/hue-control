@@ -95,6 +95,17 @@ func auth() *hue.Bridge {
 func startSleepTimer(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	lightName := r.Form["light"][0]
+
+	_, ok := timerStatus[lightName]
+	if !ok {
+		timerStatus[lightName] = &status{}
+	}
+
+	if timerStatus[lightName].running {
+		fmt.Fprintf(w, "sleepTimer for %s is already running (time left: %v), doing nothing", lightName, timerStatus[lightName].remainingTime)
+		return
+	}
+
 	d := r.Form["duration"][0]
 	duration, err := strconv.Atoi(d)
 	if err != nil {
@@ -131,12 +142,7 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 		log.Fatal(err)
 	}
 
-	_, ok := timerStatus[lightName]
-	if ok {
-		timerStatus[lightName].running = true
-	} else {
-		timerStatus[lightName] = &status{running: true}
-	}
+	timerStatus[lightName].running = true
 
 	original_brightness := nk.State.Brightness
 	log.Println("Current brightness:", original_brightness)
