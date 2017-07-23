@@ -137,18 +137,18 @@ func getAvailableLights(b *hue.Bridge) ([]*hue.Light, error) {
 
 func sleepTimer(lightName string, duration time.Duration, startBrightness uint8) {
 	b := auth()
-	nk, err := b.Lights().Get(lightName)
+	light, err := b.Lights().Get(lightName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	timerStatus[lightName].running = true
 
-	original_brightness := nk.State.Brightness
+	original_brightness := light.State.Brightness
 	log.Println("Current brightness:", original_brightness)
 
 	log.Println("Turning light on")
-	nk.On()
+	light.On()
 
 	var brightness uint8
 
@@ -158,7 +158,7 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	} else {
 		brightness = startBrightness
 		log.Println("Setting brightness to:", brightness)
-		nk.Set(&hue.State{
+		light.Set(&hue.State{
 			Brightness: brightness,
 		})
 	}
@@ -170,19 +170,19 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	for remainingTime > 0 && brightness > brightnessDecreaseStep {
 		log.Println("Sleeping", interval)
 		time.Sleep(interval)
-		// re-initialize nk, because the LightState struct does not get updated
+		// re-initialize light, because the LightState struct does not get updated
 		// when light is changed outside the script, e.g. via Hue app
-		nk, err = b.Lights().Get(lightName)
+		light, err = b.Lights().Get(lightName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		if nk.State.Brightness != brightness {
+		if light.State.Brightness != brightness {
 			log.Println("Light was changed externally, cancelling timer")
 			timerStatus[lightName].running = false
 			return
 		}
 		brightness = brightness - brightnessDecreaseStep
-		setBrightness(nk, brightness)
+		setBrightness(light, brightness)
 		remainingTime = remainingTime - interval
 		log.Println("Remaining Time:", remainingTime)
 		timerStatus[lightName].remainingTime = remainingTime
@@ -192,13 +192,13 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	// use a high transition time (10 seconds) in order to set brightness back to its original value
 	// without actually raising the brightness (and wake me up again)
 	// it has to be done this way, because brightness cannot be set when the light is turned off
-	nk.Set(&hue.State{
+	light.Set(&hue.State{
 		Brightness:     original_brightness,
 		TransitionTime: 100,
 	})
 
 	log.Println("Turning light off")
-	nk.Off()
+	light.Off()
 	timerStatus[lightName].running = false
 }
 
