@@ -182,15 +182,10 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 			return
 		}
 		brightness = brightness - brightnessDecreaseStep
-		err := nk.Set(&hue.State{
-			Brightness: brightness,
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("Decreased brightness to:", nk.State.Brightness, "expected:", brightness)
+		setBrightness(nk, brightness)
 		remainingTime = remainingTime - interval
 		log.Println("Remaining Time:", remainingTime)
+		timerStatus[lightName].remainingTime = remainingTime
 	}
 
 	log.Println("Setting brightness back to original value:", original_brightness)
@@ -205,4 +200,15 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	log.Println("Turning light off")
 	nk.Off()
 	timerStatus[lightName].running = false
+}
+
+func setBrightness(light *hue.Light, brightness uint8) {
+	err := light.Set(&hue.State{
+		Brightness: brightness,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Decreased brightness to:", light.State.Brightness, "expected:", brightness)
+
 }
