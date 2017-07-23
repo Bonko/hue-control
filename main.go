@@ -24,7 +24,7 @@ type status struct {
 	remainingTime time.Duration
 }
 
-var timerStatus = make(map[string]status)
+var timerStatus = make(map[string]*status)
 
 func main() {
 	log.Printf("listening on port %d", port)
@@ -51,7 +51,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		//log.Println("timerStatusExists: ", timerStatusExists)
 		if !timerStatusExists {
 			//log.Println("setting timerstatus")
-			timerStatus[light.Name] = status{}
+			timerStatus[light.Name] = &status{}
 		}
 	}
 
@@ -126,10 +126,7 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("timerstatus: ", timerStatus[lightName])
-	bla := timerStatus[lightName]
-	bla.running = true
-	log.Println("timerstatus after: ", timerStatus[lightName])
+	timerStatus[lightName].running = true
 	original_brightness := nk.State.Brightness
 	log.Println("Current brightness:", original_brightness)
 
@@ -164,6 +161,7 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 		}
 		if nk.State.Brightness != brightness {
 			log.Println("Light was changed externally, cancelling timer")
+			timerStatus[lightName].running = false
 			return
 		}
 		brightness = brightness - brightnessDecreaseStep
@@ -189,4 +187,5 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 
 	log.Println("Turning light off")
 	nk.Off()
+	timerStatus[lightName].running = false
 }
