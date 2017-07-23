@@ -164,10 +164,10 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	}
 
 	brightnessDecreaseStep := calcSteps(brightness)
-	remaining_time := duration * time.Minute
-	interval := remaining_time / 10
+	remainingTime := duration * time.Minute
+	interval := remainingTime / 10
 
-	for remaining_time > 0 && brightness > brightnessDecreaseStep {
+	for remainingTime > 0 && brightness > brightnessDecreaseStep {
 		log.Println("Sleeping", interval)
 		time.Sleep(interval)
 		// re-initialize nk, because the LightState struct does not get updated
@@ -189,8 +189,8 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 			log.Fatal(err)
 		}
 		log.Println("Decreased brightness to:", nk.State.Brightness, "expected:", brightness)
-		remaining_time = remaining_time - interval
-		log.Println("Remaining Time:", remaining_time)
+		remainingTime = remainingTime - interval
+		log.Println("Remaining Time:", remainingTime)
 	}
 
 	log.Println("Setting brightness back to original value:", original_brightness)
