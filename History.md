@@ -1,3 +1,8 @@
+# 0.5.0 / 2017-07-26
+
+  * [Feature] Abort sleep timer when brightness was changed externally
+  * [Bugfix] Change starting brightness values to percent
+
 # 0.4.0 / 2017-07-04
 
   * [Feature] choose light to shutdown
