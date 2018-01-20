@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Bonko/hue-control/controller"
 	"github.com/gbbr/hue"
 )
 
@@ -33,8 +34,11 @@ func main() {
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	debugHtmlPath, _ := filepath.Abs(".debug/html/index.html")
 
-	b := auth()
-	availableLights, err := getAvailableLights(b)
+	ctrl, err := controller.NewController()
+	if err != nil {
+		log.Fatalf("Error while initializing controller: %s", err)
+	}
+	availableLights, err := ctrl.AvailableLights()
 	if err != nil {
 		log.Fatalf("error while retrieving lights: %s", err)
 	}
@@ -93,15 +97,6 @@ func startSleepTimer(w http.ResponseWriter, r *http.Request) {
 
 func calcSteps(start uint8) uint8 {
 	return start / 10
-}
-
-func getAvailableLights(b *hue.Bridge) ([]*hue.Light, error) {
-	lightsService := b.Lights()
-	availableLights, err := lightsService.List()
-	if err != nil {
-		return nil, err
-	}
-	return availableLights, nil
 }
 
 func sleepTimer(lightName string, duration time.Duration, startBrightness uint8) {
