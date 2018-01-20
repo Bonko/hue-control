@@ -20,6 +20,17 @@ const (
 	port = 9091
 )
 
+var (
+	// FIXME: inject ctrl to handlers instead of using global var
+	ctrl *controller.Controller
+)
+
+func init() {
+	// FIXME: how to catch error with getting an
+	// "ctrl declared and not used" error?
+	ctrl, _ = controller.NewController()
+}
+
 func main() {
 	log.Printf("listening on port %d", port)
 	http.HandleFunc("/", rootHandler)
@@ -34,10 +45,6 @@ func main() {
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	debugHtmlPath, _ := filepath.Abs(".debug/html/index.html")
 
-	ctrl, err := controller.NewController()
-	if err != nil {
-		log.Fatalf("Error while initializing controller: %s", err)
-	}
 	availableLights, err := ctrl.AvailableLights()
 	if err != nil {
 		log.Fatalf("error while retrieving lights: %s", err)
@@ -100,16 +107,16 @@ func calcSteps(start uint8) uint8 {
 }
 
 func sleepTimer(lightName string, duration time.Duration, startBrightness uint8) {
-	b := auth()
-	nk, err := b.Lights().Get(lightName)
+	original_brightness, err := ctrl.Brightness(lightName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error: could not get current brightness: %s", err)
 	}
-	original_brightness := nk.State.Brightness
 	log.Println("Current brightness:", original_brightness)
 
 	log.Println("Turning light on")
-	nk.On()
+	if err := ctrl.On(lightName); err != nil {
+		log.Fatalf("Error: could not turn light on: %s", err)
+	}
 
 	var brightness uint8
 
@@ -119,9 +126,9 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	} else {
 		brightness = startBrightness
 		log.Println("Setting brightness to:", brightness)
-		nk.Set(&hue.State{
-			Brightness: brightness,
-		})
+		if err := ctrl.SetBrightness(lightName, brightness); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	brightnessDecreaseStep := calcSteps(brightness)
@@ -131,37 +138,27 @@ func sleepTimer(lightName string, duration time.Duration, startBrightness uint8)
 	for remaining_time > 0 && brightness > brightnessDecreaseStep {
 		log.Println("Sleeping", interval)
 		time.Sleep(interval)
-		// re-initialize nk, because the LightState struct does not get updated
-		// when light is changed outside the script, e.g. via Hue app
-		nk, err = b.Lights().Get(lightName)
+		realBrightness, err := ctrl.Brightness(lightName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		if nk.State.Brightness != brightness {
+		if realBrightness != brightness {
 			log.Println("Light was changed externally, cancelling timer")
 			return
 		}
+
 		brightness = brightness - brightnessDecreaseStep
-		err := nk.Set(&hue.State{
-			Brightness: brightness,
-		})
-		if err != nil {
+		if err := ctrl.SetBrightness(lightName, brightness); err != nil {
 			log.Fatal(err)
 		}
-		log.Println("Decreased brightness to:", nk.State.Brightness, "expected:", brightness)
+
+		log.Println("Decreased brightness to:", brightness)
 		remaining_time = remaining_time - interval
 		log.Println("Remaining Time:", remaining_time)
 	}
 
-	log.Println("Setting brightness back to original value:", original_brightness)
-	// use a high transition time (10 seconds) in order to set brightness back to its original value
-	// without actually raising the brightness (and wake me up again)
-	// it has to be done this way, because brightness cannot be set when the light is turned off
-	nk.Set(&hue.State{
-		Brightness:     original_brightness,
-		TransitionTime: 100,
-	})
-
-	log.Println("Turning light off")
-	nk.Off()
+	log.Printf("Setting brightness back to original value(%d) and turning off light", original_brightness)
+	if err := ctrl.TurnOffAndRestoreBrightness(lightName, original_brightness); err != nil {
+		log.Fatal(err)
+	}
 }
