@@ -27,3 +27,10 @@ jobs:
 
     - name: Build
       run: make build
+
+    - name: upload binaries
+      uses: actions/upload-artifact@v2
+      with:
+        name: binaries
+        path: pkg/**
+        retention-days: 1
