@@ -1,0 +1,4 @@
+github.com/gbbr/hue v0.0.0-20170407123714-2d105465c640 h1:Po6ZDRPRfyVq0PjJDXqGD2q/pTQPER3spi+39JPu2Pg=
+github.com/gbbr/hue v0.0.0-20170407123714-2d105465c640/go.mod h1:cfO+3Xyaoqzr1uWwc71yT7kdBtNFHmYE5WSmzeyBOqs=
+github.com/mitchellh/go-homedir v0.0.0-20161203194507-b8bc1bf76747 h1:eQox4Rh4ewJF+mqYPxCkmBAirRnPaHEB26UkNuPyjlk=
+github.com/mitchellh/go-homedir v0.0.0-20161203194507-b8bc1bf76747/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
