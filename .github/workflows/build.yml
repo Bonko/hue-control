@@ -23,7 +23,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install go-bindata
-      run: go get -u github.com/jteeuwen/go-bindata/...
+      run: go get -u github.com/go-bindata/go-bindata/...
 
     - name: Build
       run: make build
